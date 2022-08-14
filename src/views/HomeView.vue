@@ -1,9 +1,16 @@
 <script setup>
-import TheWelcome from '@/components/TheWelcome.vue'
+import WelcomePage from '../components/WelcomePage.vue'
 </script>
 
 <template>
   <main>
-    <TheWelcome />
+    <WelcomePage />
   </main>
 </template>
+
+<style scoped>
+main {
+  max-width: 440px;
+  margin: 0 auto;
+}
+</style>
