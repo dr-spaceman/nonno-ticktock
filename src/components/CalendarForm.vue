@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const emit = defineEmits(['on-change'])
 
@@ -38,7 +38,27 @@ const dateInputs = {
 // A reference to aid in date selection
 let dateIndex = 0
 
+const printHeader = computed(() => {
+  if (!selectedStartDate.value || !selectedEndDate.value) {
+    return 'Select a date range below'
+  }
+
+  const date1 = formatDate(selectedStartDate.value)
+  const date2 = formatDate(selectedEndDate.value)
+  const diffTime = Math.abs(date2 - date1)
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return `${diffDays + 1} days and ${diffDays} night${
+    diffDays > 1 ? 's' : ''
+  } selected`
+})
+
 function selectDay(day) {
+  if (isUnavailable(day)) {
+    return
+  }
+
+  const prev = { selectedStartDate, selectedEndDate }
+
   if (!selectedStartDate.value) {
     selectedStartDate.value = day
   } else if (!selectedEndDate.value) {
@@ -61,6 +81,20 @@ function selectDay(day) {
       selectedStartDate.value = day
     }
   }
+
+  // Check if any of the in between dates are unavailable
+  if (selectedStartDate.value && selectedEndDate.value) {
+    const start = selectedStartDate.value.index
+    const end = selectedEndDate.value.index
+    for (let i = start + 1; i < end; i++) {
+      if (isUnavailable(getDayByIndex(i))) {
+        selectedEndDate.value = prev.selectedEndDate.value
+        selectedStartDate.value = prev.selectedStartDate.value
+        return
+      }
+    }
+  }
+
   dateInputs.startDate = formatDate(selectedStartDate.value)
   dateInputs.endDate = formatDate(selectedEndDate.value)
 
@@ -119,6 +153,24 @@ const isSelected = (day) => {
   )
 }
 
+const getDayByIndex = (index) => {
+  if (typeof index !== 'number') {
+    throw new Error('index must be a number')
+  }
+
+  for (const month in cal) {
+    for (const week in cal[month]) {
+      for (const day of cal[month][week]) {
+        if (day.index === index) {
+          return day
+        }
+      }
+    }
+  }
+
+  throw new Error(`day index ${index} not found`)
+}
+
 // Fill in past days this week and today
 for (let i = 0; i <= todayDay; i++) {
   const date = todayDate - (todayDay - i)
@@ -170,12 +222,13 @@ while (iWeek <= NUM_WEEKS_AHEAD_TO_SHOW) {
 <template>
   <div class="calendar">
     <!-- <pre>{{ JSON.stringify(cal, null, 2) }}</pre> -->
+    <header role="note">{{ printHeader }}</header>
     <template v-for="(weeks, month) in cal" :key="month">
       <h5>{{ months[month] }}</h5>
       <div class="weeks">
         <div class="week" v-for="(week, index) in weeks" :key="index">
           <template v-for="(day, i) in week">
-            <div v-if="!day" class="day empty" :key="i">
+            <div v-if="!day" class="empty" :key="i">
               <span></span>
             </div>
             <div
@@ -207,24 +260,48 @@ while (iWeek <= NUM_WEEKS_AHEAD_TO_SHOW) {
 .calendar {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--gap);
+}
+
+header {
+  padding: var(--padding);
+  border: 2px solid #eee;
+  border-radius: 50px;
+  text-align: center;
 }
 
 h5 {
   margin: 0;
-  padding: 0;
+  padding: var(--padding);
   text-align: center;
   font-weight: 500;
+  font-size: 15px;
+}
+
+.weeks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
 }
 
 .week {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  gap: var(--gap);
+}
+
+.day {
+  padding: var(--padding);
+  transition: background-color 0.2s ease-in-out;
+  background-color: #f5f5f5;
 }
 
 .day:not([aria-disabled='true']) {
   cursor: pointer;
+}
+
+.day:not([aria-disabled='true']):hover {
+  background-color: hsla(160, 100%, 37%, 0.3);
 }
 
 .day[aria-disabled='true'] {

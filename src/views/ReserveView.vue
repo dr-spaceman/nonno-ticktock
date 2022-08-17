@@ -3,10 +3,6 @@ import { reactive } from 'vue'
 
 import CalendarForm from '../components/CalendarForm.vue'
 
-function onSubmit() {
-  console.log(form)
-}
-
 /**
  * Controlled form object
  *
@@ -15,6 +11,7 @@ function onSubmit() {
  * @property {string} phone
  * @property {Date} startDate
  * @property {Date} endDate
+ * @property {string} error - Error message
  */
 const form = reactive({
   name: '',
@@ -22,6 +19,7 @@ const form = reactive({
   phone: '',
   startDate: null,
   endDate: null,
+  error: null,
 })
 
 /**
@@ -30,8 +28,27 @@ const form = reactive({
  * @param {Date} inputs.endDate
  */
 function handleChangeDates(inputs) {
+  form.error = null
   form.startDate = inputs.startDate
   form.endDate = inputs.endDate
+}
+
+function onSubmit() {
+  form.error = null
+  console.log(form)
+  try {
+    ;['name', 'email'].forEach((field) => {
+      if (!form[field]) {
+        throw new Error(`${field} is required`)
+      }
+    })
+    if (!form.startDate || !form.endDate) {
+      throw new Error('Please select a date range')
+    }
+  } catch (e) {
+    console.error(e)
+    form.error = e.message
+  }
 }
 </script>
 
@@ -40,6 +57,10 @@ function handleChangeDates(inputs) {
     <h2>Book the House</h2>
 
     <form @submit.prevent="onSubmit">
+      <div v-if="form.error" class="error" role="alert">
+        <strong>Error</strong> {{ form.error }}
+      </div>
+
       <div class="calendar">
         <CalendarForm @on-change="handleChangeDates" />
       </div>
@@ -69,7 +90,7 @@ function handleChangeDates(inputs) {
       <div class="form-group">
         <label for="phone">Phone</label>
         <input
-          type="text"
+          type="tel"
           class="form-control"
           id="phone"
           v-model="form.phone"
@@ -81,8 +102,10 @@ function handleChangeDates(inputs) {
   </div>
 </template>
 
-<style scoped>
+<style>
 .reserve {
+  --gap: 4px;
+  --padding: 4px;
   max-width: 600px;
   margin: 0 auto;
 }
@@ -95,6 +118,7 @@ form {
 
 .form-group {
   display: flex;
+  align-items: center;
 }
 
 .form-group label {
@@ -104,5 +128,12 @@ form {
 
 .form-group .form-control {
   flex: 3;
+}
+
+.error {
+  color: var(--color-error);
+  border: 2px solid var(--color-error);
+  padding: var(--padding) calc(var(--padding) * 2);
+  border-radius: 3px;
 }
 </style>
