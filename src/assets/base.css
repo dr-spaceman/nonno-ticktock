@@ -19,6 +19,13 @@
   --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
   --vt-c-text-dark-1: var(--vt-c-white);
   --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
+
+  --color-primary: hsla(160, 100%, 37%, 1);
+  --color-secondary: #f39c12;
+  --color-error: #d33;
+  --color-warning: #f5a623;
+  --color-info: #4da6ff;
+  --color-success: #00a264;
 }
 
 /* semantic color variables for this project */
@@ -56,6 +63,10 @@
   box-sizing: border-box;
   position: relative;
   font-weight: normal;
+}
+
+strong {
+  font-weight: bold;
 }
 
 body {
