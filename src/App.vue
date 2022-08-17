@@ -46,10 +46,10 @@ nav a.router-link-exact-active:hover {
 
 nav a {
   display: inline-block;
-  padding: 0 1rem;
+  padding: 0 0.7rem;
 }
 
-nav a+a {
+nav a + a {
   border-left: 1px solid var(--color-border);
 }
 </style>
