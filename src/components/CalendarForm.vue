@@ -1,6 +1,8 @@
 <script setup>
 import { ref } from 'vue'
 
+const emit = defineEmits(['on-change'])
+
 const NUM_WEEKS_AHEAD_TO_SHOW = 6
 const months = [
   'January',
@@ -28,11 +30,13 @@ const days = [
 
 const selectedStartDate = ref(null)
 const selectedEndDate = ref(null)
+// Object to emit upon change events
+const dateInputs = {
+  startDate: null,
+  endDate: null,
+}
 // A reference to aid in date selection
 let dateIndex = 0
-// DOM elements input
-const startDateInput = ref('')
-const endDateInput = ref('')
 
 function selectDay(day) {
   if (!selectedStartDate.value) {
@@ -55,21 +59,18 @@ function selectDay(day) {
       selectedEndDate.value = null
     } else if (day.index < selectedStartDate.value.index) {
       selectedStartDate.value = day
-      selectedEndDate.value = null
     }
   }
-  startDateInput.value = selectedStartDate.value
-    ? formatDate(selectedStartDate.value)
-    : ''
-  endDateInput.value = selectedEndDate.value
-    ? formatDate(selectedEndDate.value)
-    : ''
+  dateInputs.startDate = formatDate(selectedStartDate.value)
+  dateInputs.endDate = formatDate(selectedEndDate.value)
+
+  emit('on-change', dateInputs)
 }
 
 function formatDate(day) {
   if (!day || !day.year || !day.month || !day.date) return ''
 
-  return new Date(day.year, day.month, day.date).toISOString().split('T')[0]
+  return new Date(day.year, day.month, day.date)
 }
 
 function getDaysInMonth(year, month) {
@@ -167,9 +168,6 @@ while (iWeek <= NUM_WEEKS_AHEAD_TO_SHOW) {
 </script>
 
 <template>
-  <input type="date" name="startDate" v-model="startDateInput" />
-  <input type="date" name="endDate" v-model="endDateInput" />
-
   <div class="calendar">
     <!-- <pre>{{ JSON.stringify(cal, null, 2) }}</pre> -->
     <template v-for="(weeks, month) in cal" :key="month">
