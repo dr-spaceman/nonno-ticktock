@@ -265,7 +265,7 @@ while (iWeek <= NUM_WEEKS_AHEAD_TO_SHOW) {
 
 header {
   padding: var(--padding);
-  border: 2px solid #eee;
+  border: 2px solid var(--color-background-mute);
   border-radius: 50px;
   text-align: center;
 }
@@ -293,7 +293,7 @@ h5 {
 .day {
   padding: var(--padding);
   transition: background-color 0.2s ease-in-out;
-  background-color: #f5f5f5;
+  background-color: var(--color-background-mute);
 }
 
 .day:not([aria-disabled='true']) {
