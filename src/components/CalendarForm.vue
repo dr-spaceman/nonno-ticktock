@@ -1,9 +1,29 @@
 <script setup>
+const props = defineProps({
+  /**
+   * The day the calendar should start on.
+   *
+   * @default {Date} today
+   */
+  startDate: {
+    type: Date,
+    default: new Date(),
+  },
+  numWeeks: {
+    type: Number,
+    default: 6,
+  },
+})
+
 import { computed, ref } from 'vue'
+
+import { useCalendarStore } from '../stores/calendar'
 
 const emit = defineEmits(['on-change'])
 
-const NUM_WEEKS_AHEAD_TO_SHOW = 6
+const store = useCalendarStore()
+store.seedMock()
+
 const months = [
   'January',
   'February',
@@ -47,13 +67,14 @@ const printHeader = computed(() => {
   const date2 = formatDate(selectedEndDate.value)
   const diffTime = Math.abs(date2 - date1)
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
   return `${diffDays + 1} days and ${diffDays} night${
     diffDays > 1 ? 's' : ''
   } selected`
 })
 
 function selectDay(day) {
-  if (isUnavailable(day)) {
+  if (!day.available) {
     return
   }
 
@@ -87,7 +108,7 @@ function selectDay(day) {
     const start = selectedStartDate.value.index
     const end = selectedEndDate.value.index
     for (let i = start + 1; i < end; i++) {
-      if (isUnavailable(getDayByIndex(i))) {
+      if (!getDayByIndex(i).available) {
         selectedEndDate.value = prev.selectedEndDate.value
         selectedStartDate.value = prev.selectedStartDate.value
         return
@@ -111,11 +132,10 @@ function getDaysInMonth(year, month) {
   return new Date(year, month, 0).getDate()
 }
 
-const today = new Date()
-const todayDate = today.getDate()
-const todayDay = today.getDay()
-const todayMonth = today.getMonth()
-const todayYear = today.getFullYear()
+const todayDate = props.startDate.getDate()
+const todayDay = props.startDate.getDay()
+const todayMonth = props.startDate.getMonth()
+const todayYear = props.startDate.getFullYear()
 const todayMonthDays = getDaysInMonth(todayYear, todayMonth)
 let iMonth = todayMonth
 let iMonthDays = todayMonthDays
@@ -138,7 +158,6 @@ const calPush = (n) => {
   }
   cal[iMonth][iMonthWeek].push(n)
 }
-const isUnavailable = (day) => (day && day.unavailable) || day.past
 
 const isSelected = (day) => {
   if (!day) {
@@ -175,12 +194,18 @@ const getDayByIndex = (index) => {
 for (let i = 0; i <= todayDay; i++) {
   const date = todayDate - (todayDay - i)
   if (date > 0 && date <= todayMonthDays) {
+    const isReserved = store.isReserved(
+      formatDate({ year: iYear, month: iMonth, date })
+    )
+    const isPast = date < todayDate
+
     calPush({
       date,
       day: i,
       month: iMonth,
       year: iYear,
-      past: date < todayDate,
+      past: isPast,
+      available: !isPast && !isReserved,
     })
   } else {
     calPush(null)
@@ -188,7 +213,8 @@ for (let i = 0; i <= todayDay; i++) {
 }
 
 // Fill in the rest
-while (iWeek <= NUM_WEEKS_AHEAD_TO_SHOW) {
+let newDate = {}
+while (iWeek <= props.numWeeks) {
   while (iDay < 7) {
     iDate++
     iDay++
@@ -210,13 +236,26 @@ while (iWeek <= NUM_WEEKS_AHEAD_TO_SHOW) {
         }
       }
     } else {
-      calPush({ date: iDate, day: iDay - 1, month: iMonth, year: iYear })
+      newDate = { date: iDate, day: iDay - 1, month: iMonth, year: iYear }
+      newDate.available = !store.isReserved(formatDate(newDate))
+      calPush(newDate)
     }
   }
   iDay = 0
   iWeek++
   iMonthWeek++
 }
+
+// Bind props to day element
+const bindCalendarDay = (day) => ({
+  class: { day: true, selected: isSelected(day), unavailable: !day.available },
+  role: 'button',
+  'data-date-index': day.index,
+  'aria-disabled': !day.available,
+  'aria-label': `${days[day.day]} ${day.date} ${months[day.month]}, ${
+    !day.available ? 'Not ' : ''
+  }Available`,
+})
 </script>
 
 <template>
@@ -228,24 +267,14 @@ while (iWeek <= NUM_WEEKS_AHEAD_TO_SHOW) {
       <div class="weeks">
         <div class="week" v-for="(week, index) in weeks" :key="index">
           <template v-for="(day, i) in week">
-            <div v-if="!day" class="empty" :key="i">
+            <div v-if="!day" class="empty" :key="`${i}-empty`">
               <span></span>
             </div>
             <div
               v-else
-              :class="{
-                day: true,
-                selected: isSelected(day),
-                unavailable: isUnavailable(day),
-              }"
-              :data-date-index="day.index"
-              role="button"
-              :aria-disabled="isUnavailable(day)"
-              :aria-label="`${days[day.day]} ${day.date} ${
-                months[day.month]
-              }, ${isUnavailable(day) ? 'Not ' : ''}Available`"
+              v-bind="bindCalendarDay(day)"
+              :key="i"
               @click="selectDay(day)"
-              :key="`${day.month}${day.date}`"
             >
               <span>{{ day.date }}</span>
             </div>
