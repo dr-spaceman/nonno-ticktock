@@ -180,7 +180,8 @@ const getDayByIndex = (index) => {
   for (const month in cal) {
     for (const week in cal[month]) {
       for (const day of cal[month][week]) {
-        if (day.index === index) {
+        if (day?.index === index) {
+          console.log('found day', day)
           return day
         }
       }
