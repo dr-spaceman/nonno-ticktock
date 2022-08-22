@@ -50,7 +50,6 @@ export const useCalendarStore = defineStore({
       }
       const formatted = this.format(date)
       const check = this.reservedDates.includes(formatted)
-      console.log('checking', formatted, 'in', this.reservedDates, check)
 
       return check
     },
