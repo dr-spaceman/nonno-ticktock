@@ -9,6 +9,13 @@
  */
 import { defineStore } from 'pinia'
 
+const today = new Date()
+const dayInFuture = (n, baseDate = today) => {
+  const future = new Date()
+  future.setDate(baseDate.getDate() + n)
+  return future
+}
+
 export const useCalendarStore = defineStore({
   id: 'calendar',
   state: () => ({
@@ -20,8 +27,36 @@ export const useCalendarStore = defineStore({
     },
   },
   actions: {
+    format(date) {
+      if (typeof date.getDate !== 'function') {
+        throw new Error('Date is not a valid date object.')
+      }
+      date.setHours(0, 0, 0, 0)
+      const dateStr = date.toJSON()
+
+      return dateStr
+    },
+    unformat(dateStr) {
+      const date = new Date(dateStr)
+
+      return date
+    },
     isReserved(date) {
-      return this.reservedDates.includes(date.toJSON())
+      if (!date) {
+        return false
+      }
+      if (typeof date.getDate !== 'function') {
+        throw new Error('Date is not a valid date object.')
+      }
+      const formatted = this.format(date)
+      const check = this.reservedDates.includes(formatted)
+      console.log('checking', formatted, 'in', this.reservedDates, check)
+
+      return check
+    },
+    addDate(date) {
+      const dateStr = this.format(date)
+      this.reservedDates.push(dateStr)
     },
     reserve(startDate, endDate) {
       if (startDate >= endDate) {
@@ -32,15 +67,15 @@ export const useCalendarStore = defineStore({
       let n = 0
       let newDates = []
       while (date <= endDate) {
-        newDates.push(date.toJSON())
-        date.setDate(date.getDate() + 1)
+        newDates.push(date)
+        date = dayInFuture(++n, date)
         n++
         if (n === 99) {
           throw new Error('timeout exceeded')
         }
       }
 
-      this.reservedDates = [...this.reservedDates, ...newDates]
+      newDates.forEach((date) => this.addDate(date))
     },
     /**
      * Add some days to the reserved dates list for testing.
