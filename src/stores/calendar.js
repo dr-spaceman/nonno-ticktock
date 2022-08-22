@@ -19,6 +19,9 @@ const dayInFuture = (n, baseDate = today) => {
 export const useCalendarStore = defineStore({
   id: 'calendar',
   state: () => ({
+    /**
+     * @type {String[]}
+     */
     reservedDates: [],
   }),
   getters: {
@@ -27,6 +30,13 @@ export const useCalendarStore = defineStore({
     },
   },
   actions: {
+    /**
+     * Format a date to a string that can be used as a key in the reservedDates array.
+     *
+     * @param {Date} date The date to format.
+     *
+     * @return {String} The formatted date.
+     */
     format(date) {
       if (typeof date.getDate !== 'function') {
         throw new Error('Date is not a valid date object.')
@@ -36,11 +46,25 @@ export const useCalendarStore = defineStore({
 
       return dateStr
     },
+    /**
+     * Unformat a date from a string that was previously formatted.
+     *
+     * @param {String} dateStr The date to unformat.
+     *
+     * @return {Date} The unformatted date.
+     */
     unformat(dateStr) {
       const date = new Date(dateStr)
 
       return date
     },
+    /**
+     * Check if a date is reserved.
+     *
+     * @param {Date} date The date to check.
+     *
+     * @return {Boolean} True if the date is reserved, false otherwise.
+     */
     isReserved(date) {
       if (!date) {
         return false
@@ -53,10 +77,21 @@ export const useCalendarStore = defineStore({
 
       return check
     },
+    /**
+     * Reserve a date.
+     *
+     * @param {Date} date The date to reserve.
+     */
     addDate(date) {
       const dateStr = this.format(date)
       this.reservedDates.push(dateStr)
     },
+    /**
+     * Register a reservation.
+     *
+     * @param {Date} startDate The start date of the reservation.
+     * @param {Date} endDate The end date of the reservation.
+     */
     reserve(startDate, endDate) {
       if (startDate >= endDate) {
         throw new Error('Start date must be before end date')
