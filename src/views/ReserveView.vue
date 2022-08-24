@@ -2,6 +2,9 @@
 import { reactive } from 'vue'
 
 import CalendarForm from '../components/CalendarForm.vue'
+import { useCalendarStore } from '../stores/calendar'
+
+const store = useCalendarStore()
 
 /**
  * Controlled form object
@@ -12,6 +15,8 @@ import CalendarForm from '../components/CalendarForm.vue'
  * @property {Date} startDate
  * @property {Date} endDate
  * @property {string} error - Error message
+ * @property {boolean} loading The form has been submitted and is thinking
+ * @property {boolean} complete The form has been submitted and stored successfully
  */
 const form = reactive({
   name: '',
@@ -20,6 +25,8 @@ const form = reactive({
   startDate: null,
   endDate: null,
   error: null,
+  loading: false,
+  complete: false,
 })
 
 /**
@@ -35,7 +42,6 @@ function handleChangeDates(inputs) {
 
 function onSubmit() {
   form.error = null
-  console.log(form)
   try {
     ;['name', 'email'].forEach((field) => {
       if (!form[field]) {
@@ -45,6 +51,10 @@ function onSubmit() {
     if (!form.startDate || !form.endDate) {
       throw new Error('Please select a date range')
     }
+
+    store.reserve(form.startDate, form.endDate)
+
+    form.complete = true
   } catch (e) {
     console.error(e)
     form.error = e.message
@@ -56,7 +66,10 @@ function onSubmit() {
   <div class="reserve">
     <h2>Book the House</h2>
 
-    <form @submit.prevent="onSubmit">
+    <div v-if="form.complete">
+      <strong>Reservation complete.</strong> Enjoy your stay.
+    </div>
+    <form v-else @submit.prevent="onSubmit">
       <div v-if="form.error" class="error" role="alert">
         <strong>Error</strong> {{ form.error }}
       </div>
@@ -106,7 +119,7 @@ function onSubmit() {
 .reserve {
   --gap: 4px;
   --padding: 4px;
-  max-width: 600px;
+  max-width: 500px;
   margin: 0 auto;
 }
 
