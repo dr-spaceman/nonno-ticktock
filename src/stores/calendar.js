@@ -10,8 +10,18 @@
 import { defineStore } from 'pinia'
 
 const today = new Date()
+/**
+ * @param {number} n Days in the future
+ * @param {Date} baseDate Base date in which to begin `n` days
+ *
+ * @returns {Date}
+ */
 const dayInFuture = (n, baseDate = today) => {
-  const future = new Date()
+  const future = new Date(
+    baseDate.getFullYear(),
+    baseDate.getMonth(),
+    baseDate.getDate()
+  )
   future.setDate(baseDate.getDate() + n)
   return future
 }
@@ -35,7 +45,7 @@ export const useCalendarStore = defineStore({
      *
      * @param {Date} date The date to format.
      *
-     * @return {String} The formatted date.
+     * @returns {String} The formatted date.
      */
     format(date) {
       if (typeof date.getDate !== 'function') {
@@ -51,7 +61,7 @@ export const useCalendarStore = defineStore({
      *
      * @param {String} dateStr The date to unformat.
      *
-     * @return {Date} The unformatted date.
+     * @returns {Date} The unformatted date.
      */
     unformat(dateStr) {
       const date = new Date(dateStr)
@@ -63,7 +73,7 @@ export const useCalendarStore = defineStore({
      *
      * @param {Date} date The date to check.
      *
-     * @return {Boolean} True if the date is reserved, false otherwise.
+     * @returns {Boolean} True if the date is reserved, false otherwise.
      */
     isReserved(date) {
       if (!date) {
@@ -102,7 +112,7 @@ export const useCalendarStore = defineStore({
       let newDates = []
       while (date <= endDate) {
         newDates.push(date)
-        date = dayInFuture(++n, date)
+        date = dayInFuture(1, date)
         n++
         if (n === 99) {
           throw new Error('timeout exceeded')
@@ -115,13 +125,7 @@ export const useCalendarStore = defineStore({
      * Add some days to the reserved dates list for testing.
      */
     seedMock() {
-      const today = new Date()
-      const dayInFuture = (n) => {
-        const future = new Date()
-        future.setDate(today.getDate() + n)
-        return future
-      }
-      this.reserve(dayInFuture(8), dayInFuture(9))
+      this.reserve(dayInFuture(10), dayInFuture(11))
       this.reserve(dayInFuture(20), dayInFuture(24))
     },
   },
