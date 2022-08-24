@@ -1,4 +1,18 @@
 <script setup>
+/**
+ * @typedef Day
+ * @type {object}
+ * @property {number} index
+ * @property {number} date Day of the month
+ * @property {number} year
+ * @property {number} month
+ * @property {number} day Day of the week
+ * @property {boolean} available
+ *
+ * @typedef Week
+ * @type {(Day|null)[]}
+ */
+
 const props = defineProps({
   /**
    * The day the calendar should start on.
@@ -9,6 +23,11 @@ const props = defineProps({
     type: Date,
     default: new Date(),
   },
+  /**
+   * Number of weeks to show in the calendar.
+   *
+   * @default {number} 6
+   */
   numWeeks: {
     type: Number,
     default: 6,
@@ -48,9 +67,23 @@ const days = [
   'Saturday',
 ]
 
+/**
+ * @type {object}
+ * @property {(null|Day)} value
+ */
 const selectedStartDate = ref(null)
+/**
+ * @type {object}
+ * @property {(null|Day)} value
+ */
 const selectedEndDate = ref(null)
-// Object to emit upon change events
+/**
+ * Object to emit upon change events
+ *
+ * @type {object}
+ * @property {Date} startDate
+ * @property {Date} endDate
+ */
 const dateInputs = {
   startDate: null,
   endDate: null,
@@ -59,7 +92,7 @@ const dateInputs = {
 let dateIndex = 0
 
 const printHeader = computed(() => {
-  if (!selectedStartDate.value || !selectedEndDate.value) {
+  if (!selectedStartDate?.value || !selectedEndDate?.value) {
     return 'Select a date range below'
   }
 
@@ -73,6 +106,11 @@ const printHeader = computed(() => {
   } selected`
 })
 
+/**
+ * Input: Mark a date as selected.
+ *
+ * @param {Day} day
+ */
 function selectDay(day) {
   if (!day.available) {
     return
@@ -122,6 +160,13 @@ function selectDay(day) {
   emit('on-change', dateInputs)
 }
 
+/**
+ * Parse Day
+ *
+ * @param {Day} day
+ *
+ * @return {Date}
+ */
 function formatDate(day) {
   if (!day || !day.year || !day.month || !day.date) return ''
 
@@ -145,7 +190,14 @@ let iDay = todayDay + 1
 let iYear = todayYear
 let iMonthWeek = 0
 
+/**
+ * @type {object}
+ * @property {Week[]}
+ */
 const cal = { [iMonth]: [[]] }
+/**
+ * @param {null|Day} n Add a blank space or day to the calendar.
+ */
 const calPush = (n) => {
   if (!cal[iMonth]) {
     cal[iMonth] = [[]]
@@ -159,6 +211,13 @@ const calPush = (n) => {
   cal[iMonth][iMonthWeek].push(n)
 }
 
+/**
+ * Check if the given day is currently selected.
+ *
+ * @param {Day} day
+ *
+ * @return {Boolean}
+ */
 const isSelected = (day) => {
   if (!day) {
     return false
@@ -263,10 +322,15 @@ const bindCalendarDay = (day) => ({
   <div class="calendar">
     <!-- <pre>{{ JSON.stringify(cal, null, 2) }}</pre> -->
     <header role="note">{{ printHeader }}</header>
-    <template v-for="(weeks, month) in cal" :key="month">
+    <template v-for="(weeks, month, monthI) in cal" :key="month">
       <h5>{{ months[month] }}</h5>
-      <div class="weeks">
-        <div class="week" v-for="(week, index) in weeks" :key="index">
+      <div class="weeks" :data-month="monthI">
+        <div
+          class="week"
+          v-for="(week, index) in weeks"
+          :key="index"
+          :data-week="index"
+        >
           <template v-for="(day, i) in week">
             <div v-if="!day" class="empty" :key="`${i}-empty`">
               <span></span>
@@ -276,6 +340,7 @@ const bindCalendarDay = (day) => ({
               v-bind="bindCalendarDay(day)"
               :key="i"
               @click="selectDay(day)"
+              :data-day="i"
             >
               <span>{{ day.date }}</span>
             </div>
