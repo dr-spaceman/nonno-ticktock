@@ -26,13 +26,19 @@ const dayInFuture = (n, baseDate = today) => {
   return future
 }
 
+let storedDates
+const storedDatesString = localStorage.getItem('reservedDates')
+if (storedDatesString) {
+  storedDates = JSON.parse(storedDatesString)
+}
+
 export const useCalendarStore = defineStore({
   id: 'calendar',
   state: () => ({
     /**
      * @type {String[]}
      */
-    reservedDates: [],
+    reservedDates: storedDates || [],
   }),
   getters: {
     getAll() {
@@ -95,6 +101,7 @@ export const useCalendarStore = defineStore({
     addDate(date) {
       const dateStr = this.format(date)
       this.reservedDates.push(dateStr)
+      localStorage.setItem('reservedDates', JSON.stringify(this.reservedDates))
     },
     /**
      * Register a reservation.
