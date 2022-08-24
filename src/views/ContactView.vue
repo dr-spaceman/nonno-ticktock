@@ -20,8 +20,7 @@ const contactDetails = {
 
 <style scoped>
 .contact {
-  max-width: 600px;
-  min-width: 300px;
+  max-width: 500px;
   margin: 0 auto;
 }
 

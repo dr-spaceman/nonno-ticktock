@@ -10,7 +10,7 @@ import WelcomePage from '../components/WelcomePage.vue'
 
 <style scoped>
 main {
-  max-width: 600px;
+  max-width: 500px;
   margin: 0 auto;
 }
 </style>
