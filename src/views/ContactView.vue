@@ -21,6 +21,7 @@ const contactDetails = {
 <style scoped>
 .contact {
   max-width: 600px;
+  min-width: 300px;
   margin: 0 auto;
 }
 
@@ -28,19 +29,18 @@ dl {
   margin: 0;
   padding: 0;
   display: flex;
-  flex-direction: row;
   flex-wrap: wrap;
-  gap: 1em;
 }
 
 dt {
   font-weight: bold;
-  flex-shrink: 0;
+  width: 19%;
+  margin: 1em 0 0;
 }
 
 dd {
-  margin: 0;
+  margin: 1em 0 0 auto;
   padding: 0;
-  flex: 1 1 80%;
+  width: 80%;
 }
 </style>
